@@ -25,8 +25,15 @@ public class GaugeView extends View {
 
     private float arcStrokeSize = 75f;
 
-    private float minValue = 0;
-    private float maxValue = 100;
+    // We get this from feed.
+    private double minValue = 0;
+    private double maxValue = 100;
+
+    // We get this from gauge.
+    private float[] values = {55f, 70f, 80f};
+    private String[] colors = {"#009900", "#FFFF00", "#FFA500", "#FF0000"};
+
+    private float startAngle = 180f;
 
     public GaugeView(Context context) {
         super(context);
@@ -73,17 +80,15 @@ public class GaugeView extends View {
 
         final float size = Math.min(width, height);
 
+        // Draw the arc.
         arcBounds.set(arcCenterX - size / 2, arcCenterY - size / 8, arcCenterX + size / 2, arcCenterY + 7 * size / 8);
 
-        // Draw the arc.
-        arcPaint.setColor(Color.rgb(50, 205, 50));
-        canvas.drawArc(arcBounds, 180f, 99f, false, arcPaint);
-        arcPaint.setColor(Color.YELLOW);
-        canvas.drawArc(arcBounds, 280f, 27f, false, arcPaint);
-        arcPaint.setColor(Color.rgb(255, 165, 0));
-        canvas.drawArc(arcBounds, 308f, 18f, false, arcPaint);
-        arcPaint.setColor(Color.RED);
-        canvas.drawArc(arcBounds, 327f, 33f, false, arcPaint);
+        int i = 0;
+        drawArcPart(canvas, minValue, values[0], colors[0]);
+        for (; i < values.length - 1; i++) {
+            drawArcPart(canvas, values[i], values[i + 1], colors[i+1]);
+        }
+        drawArcPart(canvas, values[i], maxValue, colors[i+1]);
 
         final double distance = size / 2 + 2 * arcStrokeSize / 3;
         final float y = arcCenterY + 3 * size / 8;
@@ -105,7 +110,22 @@ public class GaugeView extends View {
         canvas.drawCircle(arcCenterX - size / 2, y, 1f, needlePaint);
     }
 
-    public void showGauge() {
+    public void showGauge(float[] values, String[] colors) {
+        this.values = values;
+        this.colors = colors;
+
+        invalidate();
+    }
+
+    private void drawArcPart(Canvas canvas, double left, double right, String color) {
+        arcPaint.setColor(Color.parseColor(color));
+        final float sweepAngle = (float) (right - left) / (float) (maxValue - minValue) * 180f;
+        canvas.drawArc(arcBounds, startAngle, sweepAngle - 0.5f, false, arcPaint);
+
+        startAngle += sweepAngle + 0.5f;
+    }
+
+    private void drawText(Canvas canvas) {
         
     }
 }
