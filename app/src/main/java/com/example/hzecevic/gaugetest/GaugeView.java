@@ -17,9 +17,16 @@ public class GaugeView extends View {
 
     private Paint needlePaint;
 
+    private Paint thresholdsPaint;
+
     private Path path;
 
     private RectF arcBounds;
+
+    private float arcStrokeSize = 75f;
+
+    private float minValue = 0;
+    private float maxValue = 100;
 
     public GaugeView(Context context) {
         super(context);
@@ -39,12 +46,18 @@ public class GaugeView extends View {
     private void initialize() {
         arcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         arcPaint.setStyle(Paint.Style.STROKE);
-        arcPaint.setStrokeWidth(75f);
+        arcPaint.setStrokeWidth(arcStrokeSize);
 
         needlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         needlePaint.setStyle(Paint.Style.FILL_AND_STROKE);
-        needlePaint.setStrokeWidth(6f);
+        needlePaint.setStrokeWidth(4f);
         needlePaint.setStrokeCap(Paint.Cap.ROUND);
+
+        thresholdsPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        thresholdsPaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        thresholdsPaint.setStrokeWidth(1f);
+        thresholdsPaint.setColor(Color.rgb(158, 158, 158));
+        thresholdsPaint.setTextSize(25f);
 
         path = new Path();
         arcBounds = new RectF();
@@ -72,16 +85,27 @@ public class GaugeView extends View {
         arcPaint.setColor(Color.RED);
         canvas.drawArc(arcBounds, 327f, 33f, false, arcPaint);
 
+        final double distance = size / 2 + 2 * arcStrokeSize / 3;
+        final float y = arcCenterY + 3 * size / 8;
+        final double a = arcCenterX + distance * Math.cos(Math.toRadians(308));
+        final double b = y + distance * Math.sin(Math.toRadians(308));
+
+        canvas.drawText("55", (float) a, (float) b, thresholdsPaint);
+
         // Draw the needle.
         canvas.rotate(180f / 2, arcCenterX, arcCenterY + 3 * size / 8);
-        final float y = arcCenterY + 3 * size / 8;
         path.moveTo(arcCenterX, y);
         path.lineTo(arcCenterX, y - 20);
-        path.lineTo(arcCenterX - size / 2, y);
+        path.lineTo(arcCenterX - size / 2, y - 1);
+        path.lineTo(arcCenterX - size / 2, y + 1);
         path.close();
         canvas.drawPath(path, needlePaint);
 
-        canvas.drawCircle(arcCenterX+2, y - 10, 10f, needlePaint);
-        canvas.drawCircle(arcCenterX - size / 2 + 3f, y, 0.8f, needlePaint);
+        canvas.drawCircle(arcCenterX + 2, y - 10, 10f, needlePaint);
+        canvas.drawCircle(arcCenterX - size / 2, y, 1f, needlePaint);
+    }
+
+    public void showGauge() {
+        
     }
 }
