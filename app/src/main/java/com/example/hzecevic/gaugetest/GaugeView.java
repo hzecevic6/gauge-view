@@ -1,10 +1,10 @@
 package com.example.hzecevic.gaugetest;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Path;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
@@ -14,6 +14,12 @@ public class GaugeView extends View {
     private static final String TAG = GaugeView.class.getSimpleName();
 
     private Paint arcPaint;
+
+    private Paint needlePaint;
+
+    private Path path;
+
+    private RectF arcBounds;
 
     public GaugeView(Context context) {
         super(context);
@@ -34,35 +40,30 @@ public class GaugeView extends View {
         arcPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
         arcPaint.setStyle(Paint.Style.STROKE);
         arcPaint.setStrokeWidth(75f);
-    }
 
-//    @Override
-//    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-//        Log.d(TAG, "Width spec: " + MeasureSpec.toString(widthMeasureSpec));
-//        Log.d(TAG, "Height spec: " + MeasureSpec.toString(heightMeasureSpec));
-//
-//        int widthSize = MeasureSpec.getSize(widthMeasureSpec);
-//        int heightSize = MeasureSpec.getSize(heightMeasureSpec);
-//
-//        int chosenDimension = Math.min(widthSize, heightSize);
-//
-//        setMeasuredDimension(chosenDimension, chosenDimension);
-//    }
+        needlePaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        needlePaint.setStyle(Paint.Style.FILL_AND_STROKE);
+        needlePaint.setStrokeWidth(6f);
+        needlePaint.setStrokeCap(Paint.Cap.ROUND);
+
+        path = new Path();
+        arcBounds = new RectF();
+    }
 
     @Override
     protected void onDraw(Canvas canvas) {
-        int width = canvas.getWidth();
-        int height = canvas.getHeight();
+        final float width = canvas.getWidth();
+        final float height = canvas.getHeight();
 
-        int arcCenterX = width / 2;
-        int arcCenterY = height / 2;
+        final float arcCenterX = width / 2;
+        final float arcCenterY = height / 2;
 
-        int dimen = Math.min(width, height);
+        final float size = Math.min(width, height);
 
-        @SuppressLint("DrawAllocation") final RectF arcBounds = new RectF(arcCenterX - dimen / 2, arcCenterY - dimen / 8, arcCenterX + dimen / 2, arcCenterY + 7 * dimen / 8);
+        arcBounds.set(arcCenterX - size / 2, arcCenterY - size / 8, arcCenterX + size / 2, arcCenterY + 7 * size / 8);
 
-        // Draw the arc
-        arcPaint.setColor(Color.GREEN);
+        // Draw the arc.
+        arcPaint.setColor(Color.rgb(50, 205, 50));
         canvas.drawArc(arcBounds, 180f, 99f, false, arcPaint);
         arcPaint.setColor(Color.YELLOW);
         canvas.drawArc(arcBounds, 280f, 27f, false, arcPaint);
@@ -71,27 +72,16 @@ public class GaugeView extends View {
         arcPaint.setColor(Color.RED);
         canvas.drawArc(arcBounds, 327f, 33f, false, arcPaint);
 
-        // Draw the pointers
-        final int totalNoOfPointers = 40;
-        final int pointerMaxHeight = 25;
-        final int pointerMinHeight = 15;
+        // Draw the needle.
+        canvas.rotate(180f / 2, arcCenterX, arcCenterY + 3 * size / 8);
+        final float y = arcCenterY + 3 * size / 8;
+        path.moveTo(arcCenterX, y);
+        path.lineTo(arcCenterX, y - 20);
+        path.lineTo(arcCenterX - size / 2, y);
+        path.close();
+        canvas.drawPath(path, needlePaint);
 
-        int startX = 20;
-        int startY = arcCenterY;
-        arcPaint.setStrokeWidth(5f);
-        arcPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        canvas.drawLine(arcCenterX, arcCenterY +dimen/2 -dimen/8, startX, startY, arcPaint);
-
-//        int pointerHeight;
-//        for (int i = 0; i <= totalNoOfPointers; i++) {
-//            if (i % 5 == 0) {
-//                pointerHeight = pointerMaxHeight;
-//            } else {
-//                pointerHeight = pointerMinHeight;
-//            }
-//            canvas.drawLine(startX, startY, startX - pointerHeight, startY, arcPaint);
-//            canvas.rotate(90f / totalNoOfPointers, arcCenterX, arcCenterY);
-//        }
+        canvas.drawCircle(arcCenterX+2, y - 10, 10f, needlePaint);
+        canvas.drawCircle(arcCenterX - size / 2 + 3f, y, 0.8f, needlePaint);
     }
 }
