@@ -28,9 +28,10 @@ public class GaugeView extends View {
     // We get this from feed.
     private double minValue = 0;
     private double maxValue = 100;
+    private String currentValue = "45.0";
 
     // We get this from gauge.
-    private float[] values = {55f, 70f, 80f};
+    private String[] values = {"55", "70", "80"};
     private String[] colors = {"#009900", "#FFFF00", "#FFA500", "#FF0000"};
 
     private float startAngle = 180f;
@@ -83,34 +84,24 @@ public class GaugeView extends View {
         // Draw the arc.
         arcBounds.set(arcCenterX - size / 2, arcCenterY - size / 8, arcCenterX + size / 2, arcCenterY + 7 * size / 8);
 
-        int i = 0;
-        drawArcPart(canvas, minValue, values[0], colors[0]);
-        for (; i < values.length - 1; i++) {
-            drawArcPart(canvas, values[i], values[i + 1], colors[i+1]);
-        }
-        drawArcPart(canvas, values[i], maxValue, colors[i+1]);
-
-        final double distance = size / 2 + 2 * arcStrokeSize / 3;
         final float y = arcCenterY + 3 * size / 8;
-        final double a = arcCenterX + distance * Math.cos(Math.toRadians(308));
-        final double b = y + distance * Math.sin(Math.toRadians(308));
+        int i = 0;
 
-        canvas.drawText("55", (float) a, (float) b, thresholdsPaint);
+        drawExtremeValues(canvas, arcCenterX, y, 172f, size, String.valueOf(minValue));
+        drawArcPart(canvas, minValue, Float.parseFloat(values[0]), colors[0]);
+        for (; i < values.length - 1; i++) {
+            drawText(canvas, values[i], arcCenterX, y, size);
+            drawArcPart(canvas, Float.parseFloat(values[i]), Float.parseFloat(values[i + 1]), colors[i + 1]);
+        }
 
-        // Draw the needle.
-        canvas.rotate(180f / 2, arcCenterX, arcCenterY + 3 * size / 8);
-        path.moveTo(arcCenterX, y);
-        path.lineTo(arcCenterX, y - 20);
-        path.lineTo(arcCenterX - size / 2, y - 1);
-        path.lineTo(arcCenterX - size / 2, y + 1);
-        path.close();
-        canvas.drawPath(path, needlePaint);
+        drawText(canvas, values[i], arcCenterX, y, size);
+        drawArcPart(canvas, Float.parseFloat(values[i]), maxValue, colors[i + 1]);
+        drawExtremeValues(canvas, arcCenterX, y, 368f, size, String.valueOf(maxValue));
 
-        canvas.drawCircle(arcCenterX + 2, y - 10, 10f, needlePaint);
-        canvas.drawCircle(arcCenterX - size / 2, y, 1f, needlePaint);
+        drawNeedle(canvas, arcCenterX, arcCenterY, y, size);
     }
 
-    public void showGauge(float[] values, String[] colors) {
+    public void showGauge(String[] values, String[] colors) {
         this.values = values;
         this.colors = colors;
 
@@ -125,7 +116,35 @@ public class GaugeView extends View {
         startAngle += sweepAngle + 0.5f;
     }
 
-    private void drawText(Canvas canvas) {
-        
+    private void drawText(Canvas canvas, String value, double oldX, double oldY, double size) {
+        final double distance = size / 2 + 2 * arcStrokeSize / 3;
+
+        final double a = oldX + distance * Math.cos(Math.toRadians(startAngle));
+        final double b = oldY + distance * Math.sin(Math.toRadians(startAngle));
+
+        canvas.drawText(value, (float) a, (float) b, thresholdsPaint);
+    }
+
+    private void drawNeedle(Canvas canvas, float centerX, float centerY, float needleY, float size) {
+        canvas.rotate(180f * Float.parseFloat(currentValue) / (float) (maxValue - minValue), centerX, centerY + 3 * size / 8);
+        path.reset();
+        path.moveTo(centerX, needleY);
+        path.lineTo(centerX, needleY - 20);
+        path.lineTo(centerX - size / 2, needleY - 1);
+        path.lineTo(centerX - size / 2, needleY + 1);
+        path.close();
+        canvas.drawPath(path, needlePaint);
+
+        canvas.drawCircle(centerX + 2, needleY - 10, 10f, needlePaint);
+        canvas.drawCircle(centerX - size / 2, needleY, 1f, needlePaint);
+    }
+
+    private void drawExtremeValues(Canvas canvas, float centerX, float centerY, float angle, float size, String value) {
+        final double distance =  size / 2 + arcStrokeSize / 3;
+
+        final double a = centerX + distance * Math.cos(Math.toRadians(angle));
+        final double b = centerY + distance * Math.sin(Math.toRadians(angle));
+
+        canvas.drawText(value, (float) a, (float) b, thresholdsPaint);
     }
 }
