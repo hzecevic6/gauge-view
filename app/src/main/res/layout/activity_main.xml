@@ -8,6 +8,7 @@
     tools:context="com.example.hzecevic.gaugetest.MainActivity">
 
     <com.example.hzecevic.gaugetest.GaugeView
+        android:id="@+id/gaugeView"
         android:layout_width="280dp"
         android:layout_height="200dp"
         android:background="@android:color/white"
