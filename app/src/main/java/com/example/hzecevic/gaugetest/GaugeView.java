@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.RectF;
 import android.util.AttributeSet;
 import android.view.View;
@@ -31,10 +32,12 @@ public class GaugeView extends View {
     private String currentValue = "45.0";
 
     // We get this from gauge.
-    private String[] values = {"55", "70", "80"};
+    private String[] values = {"20", "45", "80"};
     private String[] colors = {"#009900", "#FFFF00", "#FFA500", "#FF0000"};
 
     private float startAngle = 180f;
+
+    private float arcCenterY;
 
     public GaugeView(Context context) {
         super(context);
@@ -77,7 +80,7 @@ public class GaugeView extends View {
         final float height = canvas.getHeight();
 
         final float arcCenterX = width / 2;
-        final float arcCenterY = height / 2;
+        arcCenterY = height / 2;
 
         final float size = Math.min(width, height);
 
@@ -87,7 +90,7 @@ public class GaugeView extends View {
         final float y = arcCenterY + 3 * size / 8;
         int i = 0;
 
-        drawExtremeValues(canvas, arcCenterX, y, 172f, size, String.valueOf(minValue));
+        drawExtremeValues(canvas, arcCenterX, y, 172f, size, String.valueOf(minValue), false);
         drawArcPart(canvas, minValue, Float.parseFloat(values[0]), colors[0]);
         for (; i < values.length - 1; i++) {
             drawText(canvas, values[i], arcCenterX, y, size);
@@ -96,7 +99,7 @@ public class GaugeView extends View {
 
         drawText(canvas, values[i], arcCenterX, y, size);
         drawArcPart(canvas, Float.parseFloat(values[i]), maxValue, colors[i + 1]);
-        drawExtremeValues(canvas, arcCenterX, y, 368f, size, String.valueOf(maxValue));
+        drawExtremeValues(canvas, arcCenterX, y, 368f, size, String.valueOf(maxValue), true);
 
         drawNeedle(canvas, arcCenterX, arcCenterY, y, size);
     }
@@ -117,7 +120,14 @@ public class GaugeView extends View {
     }
 
     private void drawText(Canvas canvas, String value, double oldX, double oldY, double size) {
-        final double distance = size / 2 + 2 * arcStrokeSize / 3;
+        double offset = 0;
+        if (startAngle < 270f) {
+            final Rect rect = new Rect();
+            thresholdsPaint.getTextBounds(value, 0, value.length(), rect);
+            offset = rect.height();
+        }
+
+        final double distance = size / 2 + 2 * arcStrokeSize / 3 + offset * 180f / startAngle;
 
         final double a = oldX + distance * Math.cos(Math.toRadians(startAngle));
         final double b = oldY + distance * Math.sin(Math.toRadians(startAngle));
@@ -139,12 +149,22 @@ public class GaugeView extends View {
         canvas.drawCircle(centerX - size / 2, needleY, 1f, needlePaint);
     }
 
-    private void drawExtremeValues(Canvas canvas, float centerX, float centerY, float angle, float size, String value) {
-        final double distance =  size / 2 + arcStrokeSize / 3;
+    private void drawExtremeValues(Canvas canvas, float centerX, float centerY, float angle, float size, String value, boolean max) {
+        final Rect rect = new Rect();
+        thresholdsPaint.getTextBounds(value, 0, value.length(), rect);
 
-        final double a = centerX + distance * Math.cos(Math.toRadians(angle));
-        final double b = centerY + distance * Math.sin(Math.toRadians(angle));
+        float a = rect.width();
+        float b = rect.height();
 
-        canvas.drawText(value, (float) a, (float) b, thresholdsPaint);
+        if (max) {
+            canvas.drawText(value, centerX + size / 2 - a / 2, arcCenterY + 3 * size / 8 + 2 * b, thresholdsPaint);
+        } else {
+            canvas.drawText(value, centerX - size / 2 - a / 2, arcCenterY + 3 * size / 8 + 2 * b, thresholdsPaint);
+        }
+    }
+
+    public static float dpToPx(Context context, float dp) {
+        final float scale = context.getResources().getDisplayMetrics().density;
+        return dp * scale + 0.5f;
     }
 }
