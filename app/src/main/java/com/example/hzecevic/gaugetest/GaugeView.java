@@ -113,16 +113,22 @@ public class GaugeView extends View {
         final float y = centerY + 3 * size / 8;
         int i = 0;
 
+        // Draw min value.
         drawExtremeValues(canvas, centerX, centerY, size, String.valueOf(minValue), false);
+        // Draw first part of the arc from min value to first threshold.
         drawArcPart(canvas, minValue, Float.parseFloat(values[0]), colors[0]);
 
+        // Draw all thresholds and arcs between them.
         for (; i < values.length - 1; i++) {
             drawText(canvas, values[i], centerX, y, size);
             drawArcPart(canvas, Float.parseFloat(values[i]), Float.parseFloat(values[i + 1]), colors[i + 1]);
         }
 
+        // Draw second to last threshold value.
         drawText(canvas, values[i], centerX, y, size);
+        // Draw last arc part.
         drawArcPart(canvas, Float.parseFloat(values[i]), maxValue, colors[i + 1]);
+        // Draw max value.
         drawExtremeValues(canvas, centerX, centerY, size, String.valueOf(maxValue), true);
 
         drawNeedle(canvas, centerX, y, size);
